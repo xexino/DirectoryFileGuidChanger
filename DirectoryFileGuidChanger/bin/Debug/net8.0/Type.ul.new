@@ -1,0 +1,57 @@
+VERSION '01.13'
+
+///Use this parameter type to define a Material Property Attribute
+[@Guid(a0d47c81-a89f-47e9-b433-efa7488c3ae6)]
+PARAMETERTYPE PropertyAttributeParameterType
+WITH
+    ///The natural identifier of the Material Property Attribute
+    [Length = 255]
+    [@Guid(085ce937-ada8-475d-9d93-72a3ba0e34b5)]
+    AttributeNId AS string
+    ///The Type of the Material Property Attribute
+    [@Guid(54d7da98-60e2-4946-b9a0-cde2f0020497)]
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, ea20a113-c929-470a-9c14-d95c7c0333f0)]
+    AttributeType AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.SupportedTypes
+    ///The value of the Material Property Attribute
+    [Optional]
+    [Length = 512]
+    [@Guid(8fd5fc7f-373c-4d50-a577-5cd9ce3d156a)]
+    AttributeValue AS string
+
+///Use this parameter type to define a Material Property with Attributes
+[@Guid(b28565d5-2248-4b4d-ab7e-f3e209a707e0)]
+PARAMETERTYPE MaterialPropertyExtendedType
+WITH
+    ///Mandatory property to use MaterialPropertyExtendedType parameter type. This property is used to set all the properties for the material property,
+    [Optional]
+    [@Guid(41a2221f-f6f6-440d-a584-1f9f6a43fec1)]
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, ee59263d-9ae4-46fc-9e75-7761d5c1b07a)]
+    MaterialProperty AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.PropertyParameterTypeCreate
+    ///The category of the Material Property.
+    [Optional]
+    [Length = 512]
+    [@Guid(880d17a6-1cbd-459c-b3ae-e9fe4f5d9d5b)]
+    PropertyCategory AS string
+    ///Defines the Attributes related to a Material Property.
+    [Optional]
+    [@Guid(ce684bf0-0b44-4cbe-be8a-3db8806a267e)]
+    [@GuidRef(05cc2347-6936-41c2-a184-411d44294525, 7fcb1533-f7c3-47d7-9769-412dcdb8c0a5)]
+    MaterialPropertyAttributes AS list of Siemens.SimaticIT.UAPI.MasterData.PIMaterial_MS.MSModel.Types.PropertyAttributeParameterType
+
+///Type to model a file. 
+[@Guid(50434acd-5174-4157-ab3c-2cefacb7704f)]
+PARAMETERTYPE FileTypeParam
+WITH
+    [Length = 255]
+    [@Guid(2a0f17aa-8cc9-4af1-96ec-b1ef0c89dfe6)]
+    type AS string
+    [Length = 255]
+    [@Guid(73db442c-38af-4126-8f61-41be49561ea2)]
+    name AS string
+    [Length = 52428800]
+    [@Guid(0bb24f94-2824-447a-bdf4-30cf67a3c364)]
+    contents AS string
+    [Length = 52428800]
+    [@Guid(73f7789b-7357-4919-b5cc-5d7bf3e56c32)]
+    data AS string
+

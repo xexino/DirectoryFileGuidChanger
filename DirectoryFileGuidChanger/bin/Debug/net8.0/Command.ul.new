@@ -1,0 +1,270 @@
+VERSION '01.13'
+
+///Creates a new Material and assigns it a list of Segretion Tags
+[Protected]
+[@Guid(06f53b07-d23d-4753-9140-4af4aa548d8c)]
+COMMAND CreateMaterialWithSegregationTags
+WITH
+    ///The unique identifier of the Material.
+    [Optional]
+    [Length = 384]
+    UId AS string
+    ///The natural key identifier of the Material.
+    [Length = 255]
+    NId AS string
+    ///The revision of the Material.
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, e955463f-bf77-41a8-9957-cdb8a177fd7b)]
+    Revision AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.Revision
+    ///The name assigned to the Material.
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, f398040c-2c33-49c7-81f2-01023b3f49e2)]
+    Name AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.Name
+    ///Additional information on the Material.
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, 99238e75-a2c8-4058-b463-88362d9d3ed4)]
+    Description AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.Description
+    ///The natural key identifier of the Material Template.
+    [Optional]
+    [Length = 255]
+    TemplateNId AS string
+    ///The natural key identifier of the Unit of Measure used to express the Material.
+    [Optional]
+    [Length = 255]
+    UoMNId AS string
+    ///TRUE to use the default Material Template as a basis for the creation of the Material. FALSE otherwise.
+    [Optional]
+    UseDefault AS bool
+    ///The list of Properties to be added to the Material.
+    [Optional]
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, ee59263d-9ae4-46fc-9e75-7761d5c1b07a)]
+    Properties AS list of Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.PropertyParameterTypeCreate
+    ///The list of the Names of the Segregation Tags to be assigned to the Material.
+    [Optional]
+    SegregationTags AS list of string
+    ///Additional information on the Material.
+    ///This property is not used by the command and it is meant for integration purpose. In case a post action is implemented on this command, this additional information is passed in input to the post action.
+    [Optional]
+    [Length = Max]
+    Bag AS string
+    ///The previous Revision of the Material to be used as the basis for the creation of the new Revision..
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, 609057cf-8b03-4944-b21b-974c1ec22b5d)]
+    PreviousRevision AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.OptionalRevision
+    ///TRUE if the Material Revision must be set as current. FALSE otherwise.
+    [Optional]
+    IsCurrent AS bool
+    ///The list of Production Versions to be added to the Material.
+    [Optional]
+    [@GuidRef(05cc2347-6936-41c2-a184-411d44294525, c6aca3d8-8959-4783-8e7f-41eb5d76b66d)]
+    ProductionVersions AS list of Siemens.SimaticIT.UAPI.MasterData.PIMaterial_MS.MSModel.Types.MaterialPropertyExtendedType
+RESPONSE
+    ///The primary key identifier of the new Material.
+    [Optional]
+    MaterialId AS Guid
+    ///List of the primary key identifiers of the Material Properties added to the Material.
+    [Optional]
+    PropertyIds AS list of Guid
+
+///Creates extended process Properties (if none exists) for the given Material by adding the ProcessAdditionalProperties Facet.
+///The command performs a check on the Material.
+///If the given Material NId and Revision do not exist. error 12000 is returned.
+[Protected]
+[@Guid(ae798da5-9600-4521-8d86-2162556fb646)]
+COMMAND CreateProcessAdditionalProperties
+WITH
+    ///The natural key identifier of the Material.
+    [Length = 255]
+    MaterialNId AS string
+    ///The Revision of the Material.
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, e955463f-bf77-41a8-9957-cdb8a177fd7b)]
+    MaterialRevision AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.Revision
+RESPONSE
+    /// The primary key identifier of the Facet, created by this command, representing the additional Properties of the given Material.
+    [Optional]
+    ProcessAdditionalPropertiesId AS Guid
+
+///Updates extended process Properties of the given Material. 
+///If the relative ProcessAdditionalProperties Facet does not exists, the command adds the Facet and assign the values passed to the command.
+///The command checks:
+///1. If the Material Id exists, if not error 12002 is returned.
+///2. If the Material is Frozen, if so error 12001 is returned.
+///3. If the UoM exists, if not error 12003 is returned.
+///4. If the UoM belongs to a time dimension, if not error 12004 is returned.
+///5. If the UoM is defined when a quantity is defined, if not error 12005 is returned.
+[Protected]
+[@Guid(efbc8edb-6662-4f5c-b158-f2dd5269984e)]
+COMMAND UpdateMaterialProcessAdditionalProperties
+WITH
+    ///The primary key identifier of the Material.
+    Id AS Guid
+    ///A percentage value, related to the Material Quantity, that defines margins of acceptance related to the Material usage.
+    [Optional]
+    Tolerance AS decimal
+    ///A decimal value representing a measure of how dense is the Material.
+    [Optional]
+    Density AS decimal
+    ///A percentage value representing a measure of the Material activity when being used.
+    [Optional]
+    Potency AS decimal
+    ///A decimal value that specifies the validity duration of the Material.
+    [Optional]
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, 09408716-1693-4291-9a88-b0cf20743b75)]
+    Validity AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.QuantityParameterType
+    ///A decimal value defining the lapse of time during which a Material sample can be used.
+    [Optional]
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, 09408716-1693-4291-9a88-b0cf20743b75)]
+    UseBefore AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.QuantityParameterType
+    ///TRUE to label the Material as always available, when scheduling a Work Order Operation based on required Materials availability. FALSE, otherwise.
+    [Optional]
+    InfiniteCapacity AS bool
+
+///This command will add a ProcessAdditionalProperties Facet to all Materials, to add process properties.
+[Protected]
+[@Guid(c502768d-0be1-4e09-b990-b93892b05080)]
+COMMAND MigrateMaterialCreateAdditionalProperties
+RESPONSE
+    ///The number of Materials that were successfully extended.
+    [Optional]
+    NbProcessed AS int
+    ///The number of Materials that failed to be extended.
+    [Optional]
+    NbFailed AS int
+
+///Creates Material Property Attributes to a given Material Property.
+/// 
+///The command will:
+///1. retrieve the Material Property;
+///2. check if the Material Property exists and the Material is not locked;
+///3. for each Attribute in the input, check if the attribute value is valid for its data type
+///3. add the Material Property Attributes to the Material Property.
+/// 
+///The command performs the following checks on the given Material Property:
+///1. if it exists, if not error -12006 is returned;
+///2. if its Material is not locked, if it is error -12007 is returned;
+/// 
+///The command performs the following checks on the input Attributes:
+///1. for each attribute if the attribute value is valid for the data type, if not error -12009 is returned;
+[Protected]
+[@Guid(7472af4b-93b2-4f83-8eec-5a7e29f35559)]
+COMMAND CreateMaterialPropertyAttributes
+WITH
+    ///The unique identifier of the Material Property.
+    MaterialPropertyId AS Guid
+    ///The list of Attributes to be added to the Material Property.
+    [@GuidRef(05cc2347-6936-41c2-a184-411d44294525, 7fcb1533-f7c3-47d7-9769-412dcdb8c0a5)]
+    PropertyAttributes AS list of Siemens.SimaticIT.UAPI.MasterData.PIMaterial_MS.MSModel.Types.PropertyAttributeParameterType
+RESPONSE
+    ///List of the primary key identifiers of the Material Properties Attribues added to the Material Property.
+    [Optional]
+    PropertyAttributesIds AS list of Guid
+
+///Updates Material Property Attribute to a given Material Property.
+/// 
+///The command will:
+///1. retrieve the Material Property Attribute;
+///2. check if the Material Property Attribute exists and the Material is not locked;
+///3. for the Attribute in the input, check if the attribute value is valid for its data type
+///3. updates the Material Property Attributes.
+/// 
+///The command performs the following checks on the given Material Property Attribute:
+///1. if it exists, if not error -12008 is returned;
+///2. if its Material is not locked, if it is error -12007 is returned;
+/// 
+///The command performs the following checks on the input AttributeValue:
+///1. if the attribute value is valid for the data type, if not error -12009 is returned;
+[Protected]
+[@Guid(8d787fb8-7c95-48a5-9ecd-8c535b98918f)]
+COMMAND UpdateMaterialPropertyAttribute
+WITH
+    ///The primary key identifier of the Material Property Attribute.
+    Id AS Guid
+    ///The type of the Material Property Attribute.
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, ea20a113-c929-470a-9c14-d95c7c0333f0)]
+    AttributeType AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.SupportedTypes
+    ///The value of the Material Property Attribute.
+    [Optional]
+    [Length = 255]
+    AttributeValue AS string
+
+///Deletes the given Material Property Attribute Entity.
+[Protected]
+[@Guid(09e376a0-2368-49b3-a238-e83d339ea6c2)]
+COMMAND DeleteMaterialPropertyAttribute
+WITH
+    ///The primary key identifier of the Material Property Attribute.
+    Id AS Guid
+
+///Updates the Facet UpdateMaterialPropertyExt fields, extension of Material Property Entity.
+///
+///The Command will:
+///1. Retrieve the Material Property by Id.
+///2. Check if the Material Property exists.
+///3. Check if the Material is locked.
+///4. Check if the facet exists, if not it is created.
+///5. Update the facet fields with the input values.
+///
+///The command performs the following checks:
+///1. If the given Material Property exists, if not error -12006 is returned.
+///2. If the given Material is not Locked, if it is error -12007 is returned.
+///3. If the given Material Property is not Frozen, if it is error -12001 is returned.
+[Protected]
+[@Guid(e0270cb7-3fc4-4668-87b4-e96856d262b1)]
+COMMAND UpdateMaterialPropertyExt
+WITH
+    ///The unique identifier of the Material Property.
+    Id AS Guid
+    ///The category of the Material Property.
+    [Optional]
+    [Length = 512]
+    PropertyCategory AS string
+    ///The kind of ERP object related to the Material Property. For internal use only.
+    ///A kind of ERP Object is "Characteristic".
+    [Optional]
+    [Length = 255]
+    ERPObject AS string
+
+///Updates Material creating Material Groups and Material Properties and Attributes
+///
+///The Command will:
+///1. Retrieve the Material by NId and Revision.
+///2. Check if the Material exists.
+///3. Delete all the ERP relevant Material Properties (facet.ERPObject == "Characteristic")
+///4. Create the new Material Properties according to the input coming from ERP
+///5. Create Material Property Facets
+///6. Create Material Property Attributes
+///7. Check if the Material Group corresponding to a Material Classification coming from ERP exists
+///8. If no a new Material Group is created and associated to the Material
+///9. If yes the Material Group is associated to the Material
+///
+///The command performs the following check:
+///1. If the given Material exists, if not error -12000 is returned.
+[Protected]
+[@Guid(87f28854-faaa-4cd3-b3e1-4f3beb908fd7)]
+COMMAND UpdateMaterialWithClassifications
+WITH
+    ///The natural identifier of the Material
+    [Length = 255]
+    MaterialNId AS string
+    ///The Material Properties list associated to the Material
+    [Optional]
+    [@GuidRef(05cc2347-6936-41c2-a184-411d44294525, c6aca3d8-8959-4783-8e7f-41eb5d76b66d)]
+    MaterialProperties AS list of Siemens.SimaticIT.UAPI.MasterData.PIMaterial_MS.MSModel.Types.MaterialPropertyExtendedType
+    ///Additional information on the Material.
+    ///This property is not used by the command and it is meant for integration purposes. In case a post action is implemented on this command, this additional information is passed in input to the post action.
+    ///
+    [Optional]
+    [Length = Max]
+    Bag AS string
+    ///The Material Revision
+    [@GuidRef(b269393d-8ab1-41c1-9337-181487273e8f, e955463f-bf77-41a8-9957-cdb8a177fd7b)]
+    MaterialRevision AS Siemens.SimaticIT.ReferenceData.UDM_RF.RFModel.Types.Revision
+    ///The natural identifiers of the Material Group list. They represent the Material Classification names coming from ERP
+    [Optional]
+    MaterialGroupNIds AS list of string
+RESPONSE
+    ///The natural identifier of the input Material
+    [Optional]
+    [Length = 255]
+    MaterialNId AS string
+    ///The input Material Revision
+    [Optional]
+    [Length = 255]
+    MaterialRevision AS string
+

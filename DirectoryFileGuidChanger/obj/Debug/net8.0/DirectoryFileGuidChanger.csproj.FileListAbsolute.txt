@@ -1,0 +1,14 @@
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\bin\Debug\net8.0\DirectoryFileGuidChanger.exe
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\bin\Debug\net8.0\DirectoryFileGuidChanger.deps.json
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\bin\Debug\net8.0\DirectoryFileGuidChanger.runtimeconfig.json
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\bin\Debug\net8.0\DirectoryFileGuidChanger.dll
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\bin\Debug\net8.0\DirectoryFileGuidChanger.pdb
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.GeneratedMSBuildEditorConfig.editorconfig
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.AssemblyInfoInputs.cache
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.AssemblyInfo.cs
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.csproj.CoreCompileInputs.cache
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.dll
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\refint\DirectoryFileGuidChanger.dll
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.pdb
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\DirectoryFileGuidChanger.genruntimeconfig.cache
+C:\React-CRUD-with-Asp.Net-Core-Web-API\DirectoryFileGuidChanger\DirectoryFileGuidChanger\obj\Debug\net8.0\ref\DirectoryFileGuidChanger.dll
