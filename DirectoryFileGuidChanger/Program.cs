@@ -9,7 +9,10 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string directoryPath = "C:\\Users\\ayman.elhamouss\\OneDrive - AIZOON CONSULTING SRL\\Desktop\\PIMaterial_MS.MSModel\\PIMaterial_MS.MSModel\\Model"; // Update this to the path of your directory
+
+        Console.Write("Enter the Directory Path: ");
+        //  C:\\Users\\ayman.elhamouss\\OneDrive - AIZOON CONSULTING SRL\\Desktop\\PIMaterial_MS.MSModel\\PIMaterial_MS.MSModel\\Model
+        string? directoryPath = Console.ReadLine();
 
         await Task.WhenAll(
             ReplaceGuidAsync(Path.Combine(directoryPath, "Type")),
@@ -44,17 +47,15 @@ class Program
         {
             FileInfo fileInfo = new FileInfo(filePath);
 
-            // Read the content of the file
             string content = File.ReadAllText(filePath);
 
              
             string pattern = @"@Guid\((.*?)\)";
 
-            // Replace all occurrences of @Guid( followed by a GUID with the new GUID
-            MatchEvaluator evaluator = new MatchEvaluator((Match m) => { return "@Guid(" + Guid.NewGuid().ToString() + ")"; });
+              MatchEvaluator evaluator = new MatchEvaluator((Match m) => { return "@Guid(" + Guid.NewGuid().ToString() + ")"; });
             string newContent = Regex.Replace(content, pattern, evaluator);
 
-            // Write the modified content back to a new file
+            
             string newFilePath = Path.Combine(fileInfo.Directory.FullName, fileInfo.Name + ".new");
             File.WriteAllText(newFilePath, newContent);
 
@@ -66,13 +67,68 @@ class Program
         }
     }
 
-    static async Task CheckAndReplaceGuidRefAsync(string filePath)
+       static async Task CheckAndReplaceGuidRefAsync(string filePath)
+      {
+          try
+          {
+              string content = await File.ReadAllTextAsync(filePath);
+
+              string pattern = @"@GuidRef\((.*?)\)";
+
+              MatchCollection matches = Regex.Matches(content, pattern);
+
+              foreach (Match match in matches)
+              {
+                  string[] parts = match.Groups[1].Value.Split(',').Select(s => s.Trim()).ToArray();
+
+
+                  if (parts.Length != 2)
+                      continue;
+
+                  // Check if the first parameter is not the desired GUID
+                  if (parts[0] == "05cc2347-6936-41c2-a184-411d44294525")
+                  {
+                      // Replace the first parameter with the desired GUID
+                      parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
+
+                    // Get the GUID for PARAMETERTYPE PropertyAttributeParameterType from the Type file
+
+                    //regular exp
+
+                    string parameterName = @"\[@GuidRef\([^)]*\)\]\* AS list of\s+Siemens\.SimaticIT\.UAPI MasterData\.PIMaterial_MS\.MSModel\.Types\.(\w+)";
+
+                    string parameterTypeGuid = await GetParameterTypeGuidAsync(parameterName);
+
+                   
+                    // Replace the second parameter with the GUID from the Type file
+                    if (!string.IsNullOrEmpty(parameterTypeGuid))
+                          parts[1] = parameterTypeGuid;
+                  }
+
+                  // Construct the new GuidRef string
+                  string newGuidRef = "@GuidRef(" + string.Join(", ", parts) + ")";
+
+                  // Replace the old GuidRef with the new one in the content
+                  content = content.Replace(match.Value, newGuidRef);
+              }
+
+              // Write the modified content back to the file
+              await File.WriteAllTextAsync(filePath, content);
+          }
+          catch (Exception ex)
+          {
+              Console.WriteLine($"An error occurred while checking and replacing GuidRef in file {filePath}: {ex.Message}");
+          }
+      } 
+
+
+
+    /*static async Task CheckAndReplaceGuidRefAsync(string filePath)
     {
         try
         {
             string content = await File.ReadAllTextAsync(filePath);
 
-          
             string pattern = @"@GuidRef\((.*?)\)";
 
             MatchCollection matches = Regex.Matches(content, pattern);
@@ -81,7 +137,6 @@ class Program
             {
                 string[] parts = match.Groups[1].Value.Split(',').Select(s => s.Trim()).ToArray();
 
-                
                 if (parts.Length != 2)
                     continue;
 
@@ -91,12 +146,12 @@ class Program
                     // Replace the first parameter with the desired GUID
                     parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
 
-                    // Get the GUID for PARAMETERTYPE PropertyAttributeParameterType from the Type file
-                    string parameterTypeGuid = await GetParameterTypeGuidAsync();
+                    // Get the GUIDs for PARAMETERTYPE PropertyAttributeParameterType from the Type file
+                    List<string> parameterTypeGuids = await GetParameterTypeGuidAsync();
 
-                    // Replace the second parameter with the GUID from the Type file
-                    if (!string.IsNullOrEmpty(parameterTypeGuid))
-                        parts[1] = parameterTypeGuid;
+                    // Replace the second parameter with the first GUID from the Type file
+                    if (parameterTypeGuids != null && parameterTypeGuids.Count > 0)
+                        parts[1] = parameterTypeGuids[0];
                 }
 
                 // Construct the new GuidRef string
@@ -115,47 +170,52 @@ class Program
         }
     }
 
-    public static async Task<string> GetParameterTypeGuidAsync()
-    {
-        string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
+    */
+       public static async Task<string> GetParameterTypeGuidAsync(string ParameterName)
+      {
+          string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
 
-        try
-        {
-            // Read the content of the file
-            string content = await File.ReadAllTextAsync(filePath);
+          try
+          {
+              // Read the content of the file
+              string content = await File.ReadAllTextAsync(filePath);
 
-            // Define regex pattern to match the GUID of the parameter type
-            string pattern = @"\[@Guid\((.*?)\)\]\s*PARAMETERTYPE\s+PropertyAttributeParameterType";
+              // Define regex pattern to match the GUID of the parameter type
+              string pattern = $@"\[@Guid\((.*?)\)\]\s*PARAMETERTYPE\s+{ParameterName}";
 
-            // Find the first match using the pattern
-            Match match = Regex.Match(content, pattern);
+              // Find the first match using the pattern
+              Match match = Regex.Match(content, pattern);
 
-            // If a match is found
-            if (match.Success)
-            {
-                // Extract and return the GUID value
-                string guid = match.Groups[1].Value;
-                return guid;
-            }
-            else
-            {
-              
-                return null; 
-            }
-        }
-        catch (Exception ex)
-        {
-            // Handle any exceptions
-            Console.WriteLine("An error occurred: " + ex.Message);
-            return null; 
-        }
-    }
+              // If a match is found
+              if (match.Success)
+              {
+                  // Extract and return the GUID value
+                  string guid = match.Groups[1].Value;
+                  return guid;
+              }
+              else
+              {
 
+                  return null; 
+              }
+          }
+          catch (Exception ex)
+          {
+              // Handle any exceptions
+              Console.WriteLine("An error occurred: " + ex.Message);
+              return null; 
+          }
+      }
 
+     
+ 
 
+ 
+    /*
     static string GetNewlyGeneratedGuid()
     {
         // Simulate generating a new GUID
         return Guid.NewGuid().ToString();
     }
+    */
 }
