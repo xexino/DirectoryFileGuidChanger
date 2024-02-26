@@ -2,25 +2,30 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 class Program
 {
+
+    enum ModelFile { Type, Command }
+
+    private void mymethod() { }
+
     static async Task Main(string[] args)
     {
+        var program = new Program();
 
         Console.Write("Enter the Directory Path: ");
-        //  C:\\Users\\ayman.elhamouss\\OneDrive - AIZOON CONSULTING SRL\\Desktop\\PIMaterial_MS.MSModel\\PIMaterial_MS.MSModel\\Model
-        string? directoryPath = Console.ReadLine();
+        //  
+        string? directoryPath = "C:\\Users\\ayman.elhamouss\\OneDrive - AIZOON CONSULTING SRL\\Desktop\\PIMaterial_MS.MSModel\\PIMaterial_MS.MSModel\\Model";
 
         await Task.WhenAll(
-            ReplaceGuidAsync(Path.Combine(directoryPath, "Type")),
-            ReplaceGuidAsync(Path.Combine(directoryPath, "Command"))
-
+            ReplaceGuidAsync(directoryPath)
 
         );
-        Console.ReadLine();
+
         Console.WriteLine("All GUIDs replaced successfully.");
     }
 
@@ -28,15 +33,16 @@ class Program
     {
         try
         {
-            DirectoryInfo directoryInfo = new DirectoryInfo(directoryPath);
-            FileInfo[] files = directoryInfo.GetFiles("*.ul", SearchOption.TopDirectoryOnly);
+            string commandFileNAme = Path.Combine(directoryPath, "Command") + "\\Command.ul";
+            string typeFileName = Path.Combine(directoryPath, "Type") + "\\Type.ul";
+            ReplaceGuid(typeFileName);
+            ReplaceGuid(commandFileNAme);
 
-            foreach (FileInfo file in files)
-            {
-                ReplaceGuid(file.FullName);
-                await CheckAndReplaceGuidRefInTypeFileAsync(file.FullName + ".new");
-                await CheckAndReplaceGuidRefInCommandFileAsync(file.FullName + ".new");
-            }
+            string commandFileNameNew = Path.Combine(directoryPath, "Command") + "\\Command.ul.new";
+            string typeFileNameNew = Path.Combine(directoryPath, "Type") + "\\Type.ul.new";
+            CheckAndReplaceGuidRefInTypeFile(typeFileNameNew);
+            CheckAndReplaceGuidRefInCommandFile(commandFileNameNew);
+
         }
         catch (Exception ex)
         {
@@ -72,11 +78,11 @@ class Program
 
 
 
-    static async Task CheckAndReplaceGuidRefInTypeFileAsync(string filePath)
+    static void CheckAndReplaceGuidRefInTypeFile(string filePath)
     {
         try
         {
-            string content = await File.ReadAllTextAsync(filePath);
+            string content = File.ReadAllText(filePath);
 
             string pattern = @"@GuidRef\((.*?)\)";
 
@@ -96,7 +102,7 @@ class Program
                     parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
 
                     // Get the first GUID from the Type file
-                    string firstGuid = await GetFirstGuidAsync();
+                    string firstGuid = GetFirstGuidAsync();
 
                     // Replace the second parameter with the first GUID from the Type file
                     if (firstGuid != null)
@@ -111,7 +117,7 @@ class Program
             }
 
             // Write the modified content back to the file
-            await File.WriteAllTextAsync(filePath, content);
+            File.WriteAllText(filePath, content);
 
         }
         catch (Exception ex)
@@ -122,12 +128,20 @@ class Program
 
 
 
-    static async Task CheckAndReplaceGuidRefInCommandFileAsync(string filePath)
+    static void CheckAndReplaceGuidRefInCommandFile(string filePath)
 
     {
-        try
+        List<string> nextLinesAfterGuidRef = ExtractNextLinesAfterGuidRef(filePath).Select(x => x).ToList();
+        foreach (string line in nextLinesAfterGuidRef)
         {
-            string content = await File.ReadAllTextAsync(filePath);
+            Console.WriteLine(line);
+        }
+        try
+
+        {
+
+
+            string content = File.ReadAllText(filePath);
 
             string pattern = @"@GuidRef\((.*?)\)";
 
@@ -146,20 +160,25 @@ class Program
                     // Replace the first parameter with the desired GUID
                     parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
 
-                    //handle the command file changing GuidRef here : :)
+                    //handle the command file changing GuidRef here  :)  
 
-                    List<string> nextLinesAfterGuidRef = ExtractNextLinesAfterGuidRef(filePath);
-                    List<(string ParameterType, string Guid)> parameterTypesAndGuidsAsync = await GetParameterTypesAndGuidsAsync();
+                    List<(string ParameterType, string Guid)> parameterTypesAndGuidsAsync = GetParameterTypesAndGuidsAsync();
 
                     List<string> parameterTypes = parameterTypesAndGuidsAsync.Select(pair => pair.ParameterType).ToList();
-                    List<string> guids = parameterTypesAndGuidsAsync.Select(pair => pair.Guid).ToList();
 
-                    List<(string MatchedLine, string Guid)> matchingResults = FindMatchingResults(nextLinesAfterGuidRef, parameterTypesAndGuidsAsync);
 
-                    foreach (var result in matchingResults)
-                    {
-                        parts[1] = result.Guid;
-                    }
+                    //foreach(string parameterType in parameterTypes)
+                    //{
+                    //    Console.WriteLine($"{parameterType}");
+                    //}
+
+
+
+
+                    //foreach (var result in matchingResults)
+                    //{
+                    //    parts[1] = result.Guid;
+                    //}
                 }
 
                 // Construct the new GuidRef string
@@ -170,7 +189,7 @@ class Program
             }
 
             // Write the modified content back to the file
-            await File.WriteAllTextAsync(filePath, content);
+            File.WriteAllText(filePath, content);
         }
         catch (Exception ex)
         {
@@ -179,7 +198,7 @@ class Program
     }
 
     //Function that return the parameter types and guids 
-    static async Task<List<(string ParameterType, string Guid)>> GetParameterTypesAndGuidsAsync()
+    static List<(string ParameterType, string Guid)> GetParameterTypesAndGuidsAsync()
     {
         string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
         List<(string ParameterType, string Guid)> parameterTypesAndGuids = new List<(string ParameterType, string Guid)>();
@@ -187,7 +206,7 @@ class Program
         try
         {
             // Read the content of the file
-            string content = await File.ReadAllTextAsync(filePath);
+            string content = File.ReadAllText(filePath);
 
             // Define regex pattern to match the PARAMETERTYPE
             string pattern = @"\[@Guid\((.*?)\)\]\s*PARAMETERTYPE\s+(\S+)";
@@ -284,13 +303,13 @@ class Program
 
         return matchingResults;
     }
- 
-    static async Task<string> GetFirstGuidAsync()
+
+    static string GetFirstGuidAsync()
     {
         string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
         try
         {
-            string content = await File.ReadAllTextAsync(filePath);
+            string content = File.ReadAllText(filePath);
             string pattern = @"\[@Guid\((.*?)\)\]";
             Match match = Regex.Match(content, pattern);
 
