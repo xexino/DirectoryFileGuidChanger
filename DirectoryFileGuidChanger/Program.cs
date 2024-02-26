@@ -17,8 +17,10 @@ class Program
         await Task.WhenAll(
             ReplaceGuidAsync(Path.Combine(directoryPath, "Type")),
             ReplaceGuidAsync(Path.Combine(directoryPath, "Command"))
-        );
 
+
+        );
+        Console.ReadLine();
         Console.WriteLine("All GUIDs replaced successfully.");
     }
 
@@ -32,7 +34,8 @@ class Program
             foreach (FileInfo file in files)
             {
                 ReplaceGuid(file.FullName);
-                await CheckAndReplaceGuidRefAsync(file.FullName + ".new");
+                await CheckAndReplaceGuidRefInTypeFileAsync(file.FullName + ".new");
+                await CheckAndReplaceGuidRefInCommandFileAsync(file.FullName + ".new");
             }
         }
         catch (Exception ex)
@@ -49,13 +52,13 @@ class Program
 
             string content = File.ReadAllText(filePath);
 
-             
+
             string pattern = @"@Guid\((.*?)\)";
 
-              MatchEvaluator evaluator = new MatchEvaluator((Match m) => { return "@Guid(" + Guid.NewGuid().ToString() + ")"; });
+            MatchEvaluator evaluator = new MatchEvaluator((Match m) => { return "@Guid(" + Guid.NewGuid().ToString() + ")"; });
             string newContent = Regex.Replace(content, pattern, evaluator);
 
-            
+
             string newFilePath = Path.Combine(fileInfo.Directory.FullName, fileInfo.Name + ".new");
             File.WriteAllText(newFilePath, newContent);
 
@@ -67,63 +70,9 @@ class Program
         }
     }
 
-       static async Task CheckAndReplaceGuidRefAsync(string filePath)
-      {
-          try
-          {
-              string content = await File.ReadAllTextAsync(filePath);
-
-              string pattern = @"@GuidRef\((.*?)\)";
-
-              MatchCollection matches = Regex.Matches(content, pattern);
-
-              foreach (Match match in matches)
-              {
-                  string[] parts = match.Groups[1].Value.Split(',').Select(s => s.Trim()).ToArray();
 
 
-                  if (parts.Length != 2)
-                      continue;
-
-                  // Check if the first parameter is not the desired GUID
-                  if (parts[0] == "05cc2347-6936-41c2-a184-411d44294525")
-                  {
-                      // Replace the first parameter with the desired GUID
-                      parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
-
-                    // Get the GUID for PARAMETERTYPE PropertyAttributeParameterType from the Type file
-
-                    //regular exp
-
-                    string parameterName = @"\[@GuidRef\([^)]*\)\]\* AS list of\s+Siemens\.SimaticIT\.UAPI MasterData\.PIMaterial_MS\.MSModel\.Types\.(\w+)";
-
-                    string parameterTypeGuid = await GetParameterTypeGuidAsync(parameterName);
-
-                   
-                    // Replace the second parameter with the GUID from the Type file
-                    if (!string.IsNullOrEmpty(parameterTypeGuid))
-                          parts[1] = parameterTypeGuid;
-                  }
-
-                  // Construct the new GuidRef string
-                  string newGuidRef = "@GuidRef(" + string.Join(", ", parts) + ")";
-
-                  // Replace the old GuidRef with the new one in the content
-                  content = content.Replace(match.Value, newGuidRef);
-              }
-
-              // Write the modified content back to the file
-              await File.WriteAllTextAsync(filePath, content);
-          }
-          catch (Exception ex)
-          {
-              Console.WriteLine($"An error occurred while checking and replacing GuidRef in file {filePath}: {ex.Message}");
-          }
-      } 
-
-
-
-    /*static async Task CheckAndReplaceGuidRefAsync(string filePath)
+    static async Task CheckAndReplaceGuidRefInTypeFileAsync(string filePath)
     {
         try
         {
@@ -146,12 +95,71 @@ class Program
                     // Replace the first parameter with the desired GUID
                     parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
 
-                    // Get the GUIDs for PARAMETERTYPE PropertyAttributeParameterType from the Type file
-                    List<string> parameterTypeGuids = await GetParameterTypeGuidAsync();
+                    // Get the first GUID from the Type file
+                    string firstGuid = await GetFirstGuidAsync();
 
                     // Replace the second parameter with the first GUID from the Type file
-                    if (parameterTypeGuids != null && parameterTypeGuids.Count > 0)
-                        parts[1] = parameterTypeGuids[0];
+                    if (firstGuid != null)
+                        parts[1] = firstGuid;
+                }
+
+                // Construct the new GuidRef string
+                string newGuidRef = "@GuidRef(" + string.Join(", ", parts) + ")";
+
+                // Replace the old GuidRef with the new one in the content
+                content = content.Replace(match.Value, newGuidRef);
+            }
+
+            // Write the modified content back to the file
+            await File.WriteAllTextAsync(filePath, content);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while checking and replacing GuidRef in file {filePath}: {ex.Message}");
+        }
+    }
+
+
+
+    static async Task CheckAndReplaceGuidRefInCommandFileAsync(string filePath)
+
+    {
+        try
+        {
+            string content = await File.ReadAllTextAsync(filePath);
+
+            string pattern = @"@GuidRef\((.*?)\)";
+
+            MatchCollection matches = Regex.Matches(content, pattern);
+
+            foreach (Match match in matches)
+            {
+                string[] parts = match.Groups[1].Value.Split(',').Select(s => s.Trim()).ToArray();
+
+                if (parts.Length != 2)
+                    continue;
+
+                // Check if the first parameter is not the desired GUID
+                if (parts[0] == "05cc2347-6936-41c2-a184-411d44294525")
+                {
+                    // Replace the first parameter with the desired GUID
+                    parts[0] = "d9c194b4-8ab7-41e1-a0ae-893ecb9ec9e8";
+
+                    //handle the command file changing GuidRef here : :)
+
+                    List<string> nextLinesAfterGuidRef = ExtractNextLinesAfterGuidRef(filePath);
+                    List<(string ParameterType, string Guid)> parameterTypesAndGuidsAsync = await GetParameterTypesAndGuidsAsync();
+
+                    List<string> parameterTypes = parameterTypesAndGuidsAsync.Select(pair => pair.ParameterType).ToList();
+                    List<string> guids = parameterTypesAndGuidsAsync.Select(pair => pair.Guid).ToList();
+
+                    List<(string MatchedLine, string Guid)> matchingResults = FindMatchingResults(nextLinesAfterGuidRef, parameterTypesAndGuidsAsync);
+
+                    foreach (var result in matchingResults)
+                    {
+                        parts[1] = result.Guid;
+                    }
                 }
 
                 // Construct the new GuidRef string
@@ -170,52 +178,136 @@ class Program
         }
     }
 
-    */
-       public static async Task<string> GetParameterTypeGuidAsync(string ParameterName)
-      {
-          string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
-
-          try
-          {
-              // Read the content of the file
-              string content = await File.ReadAllTextAsync(filePath);
-
-              // Define regex pattern to match the GUID of the parameter type
-              string pattern = $@"\[@Guid\((.*?)\)\]\s*PARAMETERTYPE\s+{ParameterName}";
-
-              // Find the first match using the pattern
-              Match match = Regex.Match(content, pattern);
-
-              // If a match is found
-              if (match.Success)
-              {
-                  // Extract and return the GUID value
-                  string guid = match.Groups[1].Value;
-                  return guid;
-              }
-              else
-              {
-
-                  return null; 
-              }
-          }
-          catch (Exception ex)
-          {
-              // Handle any exceptions
-              Console.WriteLine("An error occurred: " + ex.Message);
-              return null; 
-          }
-      }
-
-     
- 
-
- 
-    /*
-    static string GetNewlyGeneratedGuid()
+    //Function that return the parameter types and guids 
+    static async Task<List<(string ParameterType, string Guid)>> GetParameterTypesAndGuidsAsync()
     {
-        // Simulate generating a new GUID
-        return Guid.NewGuid().ToString();
+        string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
+        List<(string ParameterType, string Guid)> parameterTypesAndGuids = new List<(string ParameterType, string Guid)>();
+
+        try
+        {
+            // Read the content of the file
+            string content = await File.ReadAllTextAsync(filePath);
+
+            // Define regex pattern to match the PARAMETERTYPE
+            string pattern = @"\[@Guid\((.*?)\)\]\s*PARAMETERTYPE\s+(\S+)";
+            string guidPattern = @"\[@Guid\((.*?)\)\]";
+
+            // Find all matches using the pattern
+            MatchCollection matches = Regex.Matches(content, pattern);
+            MatchCollection guidMatches = Regex.Matches(content, guidPattern);
+
+            foreach (Match match in matches)
+            {
+                string matchValue = match.Groups[2].Value;
+
+                // Find the GUID match that precedes the current parameter type match
+                Match guidMatch = guidMatches.LastOrDefault(m => m.Index == match.Index);
+                if (guidMatch != null)
+                {
+                    string guidMatchValue = guidMatch.Groups[1].Value;
+                    parameterTypesAndGuids.Add((matchValue, guidMatchValue));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any exceptions
+            Console.WriteLine("An error occurred: " + ex.Message);
+        }
+
+        return parameterTypesAndGuids;
     }
-    */
+    //Function that extract the Proprety type from the command file
+    static List<string> ExtractNextLinesAfterGuidRef(string filePath)
+    {
+        List<string> extractedContentList = new List<string>();
+
+        if (File.Exists(filePath))
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                bool foundGuidRef = false;
+
+                foreach (string line in lines)
+                {
+                    if (foundGuidRef)
+                    {
+                        Match match = Regex.Match(line, @"\.[^.]+\s*$");
+                        if (match.Success)
+                        {
+                            string extractedString = match.Value.TrimStart('.').Trim();
+                            extractedContentList.Add(extractedString);
+                        }
+                        foundGuidRef = false;
+                    }
+
+                    if (line.Contains("[@GuidRef("))
+                    {
+                        foundGuidRef = true;
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine($"An error occurred while reading the file: {e.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("The file does not exist.");
+        }
+
+        return extractedContentList;
+    }
+
+
+    //in this function we check the matching results 
+    static List<(string MatchedLine, string Guid)> FindMatchingResults(List<string> list1, List<(string ParameterType, string Guid)> list2)
+    {
+        List<(string MatchedLine, string Guid)> matchingResults = new List<(string MatchedLine, string Guid)>();
+
+
+        foreach (string line in list1)
+        {
+
+            foreach (var parameterTypeAndGuid in list2)
+            {
+                if (line.Contains(parameterTypeAndGuid.ParameterType))
+                {
+                    matchingResults.Add((line, parameterTypeAndGuid.Guid));
+                    break;
+                }
+            }
+        }
+
+        return matchingResults;
+    }
+ 
+    static async Task<string> GetFirstGuidAsync()
+    {
+        string filePath = @"C:\Users\ayman.elhamouss\OneDrive - AIZOON CONSULTING SRL\Desktop\PIMaterial_MS.MSModel\PIMaterial_MS.MSModel\Model\Type\Type.ul.new";
+        try
+        {
+            string content = await File.ReadAllTextAsync(filePath);
+            string pattern = @"\[@Guid\((.*?)\)\]";
+            Match match = Regex.Match(content, pattern);
+
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+            return null; // Return null if no matching GUID found
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("An error occurred: " + ex.Message);
+            return null;
+        }
+    }
+
+
+
+
 }

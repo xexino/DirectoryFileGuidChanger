@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DirectoryFileGuidChanger")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c164af351a9cd9e2b910ba5d25e9ed82ea42d582")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d4b705d49f4c10cf6c4c78e1792ef4e00c026e15")]
 [assembly: System.Reflection.AssemblyProductAttribute("DirectoryFileGuidChanger")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DirectoryFileGuidChanger")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
